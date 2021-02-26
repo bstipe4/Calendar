@@ -6,9 +6,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from . import auth, crud, dependencies, schemas
+from . import auth, crud, db, dependencies, models, schemas
 from .services import calendar
 
+models.Base.metadata.create_all(bind=db.engine)
 app = FastAPI()
 
 
