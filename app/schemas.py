@@ -2,17 +2,17 @@ import datetime
 import uuid
 from typing import Optional
 
-from pydantic import BaseModel, Field, AnyUrl
+from pydantic import AnyUrl, BaseModel, Field
 
 
 class UserBase(BaseModel):
-    username: str
-    first_name: str
-    last_name: str
+    username: str = Field(..., min_length=3)
+    first_name: str = Field(..., min_length=1)
+    last_name: str = Field(..., min_length=1)
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=6)
 
 
 class User(UserBase):
@@ -33,10 +33,7 @@ class ApartmentCreate(ApartmentBase):
 
 
 class Apartment(ApartmentBase):
-    owner: User
-
-    class Config:
-        orm_mode = True
+    pass
 
 
 class EventBase(BaseModel):
@@ -48,7 +45,7 @@ class EventBase(BaseModel):
 
 
 class EventCreate(EventBase):
-    url: Optional[str] = None
+    pass
 
 
 class Event(EventBase):
@@ -62,13 +59,13 @@ class EventInDBCustom(BaseModel):
     day: datetime.date
     status: str
 
-    class Config:
-        orm_mode = True
-
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+    class Config:
+        orm_mode = True
 
 
 class TokenData(BaseModel):
