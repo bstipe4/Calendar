@@ -1,7 +1,7 @@
 import datetime
 
 from fastapi import Depends, FastAPI, File, HTTPException, Response, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -11,6 +11,11 @@ from .services import calendar
 
 models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI()
+
+
+@app.exception_handler(Exception)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(content={"detail": "Internal server error"}, status_code=500)
 
 
 @app.post("/register/", response_model=schemas.User)
@@ -59,12 +64,7 @@ def import_calendar_from_file(
             detail="Invalid ICS file", status_code=status.HTTP_400_BAD_REQUEST
         )
 
-    except Exception:
-        raise HTTPException(
-            detail="Server error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-    return {"message": "success"}
+    return {"status": "success"}
 
 
 @app.post("/import-from-url", status_code=status.HTTP_201_CREATED)
@@ -80,12 +80,8 @@ def import_calendar_from_url(
         raise HTTPException(
             detail="Invalid ICS file", status_code=status.HTTP_400_BAD_REQUEST
         )
-    except Exception:
-        raise HTTPException(
-            detail="Server error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
 
-    return {"message": "success"}
+    return {"status": "success"}
 
 
 @app.get("/export/{apartment_id}", response_class=FileResponse)
@@ -129,3 +125,35 @@ def get_cleaning_dates(
     )
 
     return calendar_data
+
+
+@app.put(
+    "/calendars/{apartment_id}",
+    description="Update apartment calendar from stored url",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def update_apartment_calendar(
+    apartment_id: int,
+    db: Session = Depends(dependencies.get_db),
+    current_user: schemas.User = Depends(dependencies.get_current_user),
+):
+
+    apartment = crud.get_apartment_by_id(db, current_user.id, apartment_id)
+    if not apartment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Apartment not found",
+        )
+    if not apartment.calendar_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Calendar url missing",
+        )
+    try:
+        calendar.import_calendar_from_url(db, current_user.id, apartment.calendar_url)
+    except ValidationError:
+        raise HTTPException(
+            detail="Invalid ICS file", status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    return {"status": "success"}

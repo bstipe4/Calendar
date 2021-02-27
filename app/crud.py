@@ -42,23 +42,6 @@ def create_apartment(db: Session, apartment: schemas.ApartmentCreate, commit=Tru
     return db_item
 
 
-def get_or_create_apartment(
-    db: Session, owner_id: int, apartment_id: str, calendar_url=None, commit=True
-):
-    db_item = get_apartment_by_id(db, owner_id, apartment_id)
-    if db_item:
-        return db_item, False
-
-    db_item = create_apartment(
-        db,
-        schemas.ApartmentCreate(
-            id=apartment_id, owner_id=owner_id, calendar_url=calendar_url
-        ),
-        commit,
-    )
-    return db_item, True
-
-
 def create_events(db: Session, events: List[schemas.EventCreate], commit=True):
     db_items = [models.Event(**event.dict()) for event in events]
     db.bulk_save_objects(db_items)
@@ -89,7 +72,28 @@ def insert_or_update_apartment_calendar(
     db.commit()
 
 
+def get_or_create_apartment(
+    db: Session, owner_id: int, apartment_id: str, calendar_url=None, commit=True
+):
+    db_item = get_apartment_by_id(db, owner_id, apartment_id)
+    if db_item:
+        return db_item, False
+
+    db_item = create_apartment(
+        db,
+        schemas.ApartmentCreate(
+            id=apartment_id, owner_id=owner_id, calendar_url=calendar_url
+        ),
+        commit,
+    )
+    return db_item, True
+
+
 def get_events_with_statuses_per_day(db: Session, owner_id, date_from, date_to):
+    """
+    Get owners apartments statuses for each day between date_from and date_to
+    so calendar can be made for that period
+    """
     db_items = db.execute(
         f"""SELECT
       *
