@@ -88,6 +88,7 @@ def _get_apartment_cleaning_data(events: List[schemas.EventInDBCustom]):
 
     for event in events:
         if event.gap_start and event.gap_end:
+            # these events represent days when apartments can be cleaned
             guest_shift_dates.add(event.gap_start)
             guest_shift_dates.add(event.gap_end)
 
