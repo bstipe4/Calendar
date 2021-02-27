@@ -18,6 +18,11 @@ async def validation_exception_handler(request, exc):
     return JSONResponse(content={"detail": "Internal server error"}, status_code=500)
 
 
+@app.get("/ping")
+def ping():
+    return {"pong": True}
+
+
 @app.post("/register/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(dependencies.get_db)):
     db_user = crud.get_user_by_username(db, username=user.username)

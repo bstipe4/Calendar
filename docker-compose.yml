@@ -1,23 +1,19 @@
 version: "3"
 
 services:
-#  app:
-#    build:
-#      context: .
-#    ports:
-#      - "3003:3003"
-#    volumes:
-#      - .:/app
-#    environment:
-#      - SECRET_KEY=t0j=-#jpl@r7$$+tk3!0mf83-z0!j_m31w9*=-b-p2cckuppbk9
-#      - DB_HOST=db
-#      - DB_NAME=postgres
-#      - DB_USER=postgres
-#      - DB_PASS=postgres
-#    depends_on:
-#      - db
-#    command: >
-#      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:3003"
+  app:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      - db
 
   db:
     image: postgres:13
@@ -25,7 +21,7 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-#    volumes:
-#      - ./postgres_data:/var/lib/postgresql/data
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
